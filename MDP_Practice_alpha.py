@@ -44,8 +44,7 @@ HP = [
         [  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  0,  0, -2,  1,  1,  0,  0,  0],
         [  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  1,  1,  0,  0,  0],
         [ -3,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  0,  0,  0,  0,  1,  1,  0,  0],
-        [ -3,  0,  0,  0,  0,  0,  0,  1,  0,  0,  1,  1,  0,  0,  0,  1,  1,  1,  0]
-           ]
+        [ -3,  0,  0,  0,  0,  0,  0,  1,  0,  0,  1,  1,  0,  0,  0,  1,  1,  1,  0] ]
 
 # 세로 22 가로 21 둘 다 수정됨
 
@@ -80,10 +79,10 @@ SLOPE = [
 import numpy as np
 
 def unite(size) : # 상태 가치들 합침
-    array = []
+    
     for i in range(size) :
         for k in range(size) :
-            field[i][k] = HIDE[i][k] + HP[i][k] + SLOPE[i][k]
+            field[i * k + k] = HIDE[i][k] + HP[i][k] + SLOPE[i][k]
 
 ######
 
@@ -107,13 +106,18 @@ def move(s, a):
     
     elif a == 4 : # 좌상
         return s - 20 if s >= 20 and s % 4 != 0 else s
-    elif a == 5 : # 우상
-        return s - 3 if s > 3 and s % 4 != 3 else s
-    elif a == 6 : # 좌하
-        return s + 3 if s < 11 and s % 4 != 0 else s
-    elif a == 7 : # 우하
-        return s + 5 if s < 11 and s % 4 != 3 else s
     
+    elif a == 5 : # 우상
+        return s - 18 if s >= 19 and s % 19 != 18 else s
+    
+    elif a == 6 : # 좌하
+        return s + 18 if s <= 341 and s % 19 != 0 else s
+    
+    elif a == 7 : # 우하
+        return s + 20 if s <= 340 and s % 19 != 18 else s
+
+propagate_ratio = 1
+
 def iteration(states, actions, r, gamma = 0.9, limit = 0.001) :
     v = np.zeros(size * size) # 각 상태들의 가치
     policy = np.zeros(size * size) # 각 상태들의 최적 정책
@@ -122,7 +126,14 @@ def iteration(states, actions, r, gamma = 0.9, limit = 0.001) :
         delta = 0 # 상태의 가치가 얼마나 변하는가를 담음
         for s in states :
             temp_v = v[s] # 현재 상태의 밸류를 임시 저장
-            v[s] = max([r[move(s, a)] + gamma * move[s, a] * 1] for a in actions)
+
+            check = []
+            for a in actions :
+                tmp1 = r[move(s, a)]
+                tmp2 = gamma * move(s,a) * propagate_ratio
+                check.append(tmp1 + tmp2)
+            v[s] = max(check)
+            # v[s] = max([r[move(s, a)] + gamma * move(s, a) * propagate_ratio] for a in actions)
             delta = max(delta, abs(temp_v - v[s]))
             # 기존의 가치 - 새로 갱신한 가치의값과 기존의 델타 값 중 뭐가 더 큰지를 비교
         if delta < limit :
@@ -136,18 +147,17 @@ def iteration(states, actions, r, gamma = 0.9, limit = 0.001) :
     return policy, v  # 최적 정책과 가치 함수 반환
 
 size = 19
-field = np.zeros((size, size))
+field = np.zeros(size * size)
 actions = [0, 1, 2, 3, 4, 5, 6, 7]
 # 상 하 좌 우 좌상 우상 좌하 우하
-
+states = list(range((size * size) - 1))
 unite(size)
-# policy, v = iteration(states, actions, field)
 
-states = list(range(1, (size * size) + 1))
+field[len(field) - 1] = 9
+policy, v = iteration(states, actions, field)
 
 size = 19
 
-for i in range(size) : 
-    for k in range(size) :
-        print(states[i * size + k], end=' ')
-    print()
+print(policy)
+
+print(v)
