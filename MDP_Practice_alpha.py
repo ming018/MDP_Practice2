@@ -133,7 +133,11 @@ def iteration(states, actions, r, gamma = 0.9, limit = 0.001) :
                 tmp2 = gamma * move(s,a) * propagate_ratio
                 check.append(tmp1 + tmp2)
             v[s] = max(check)
+
+
             # v[s] = max([r[move(s, a)] + gamma * move(s, a) * propagate_ratio] for a in actions)
+
+
             delta = max(delta, abs(temp_v - v[s]))
             # 기존의 가치 - 새로 갱신한 가치의값과 기존의 델타 값 중 뭐가 더 큰지를 비교
         if delta < limit :
@@ -153,7 +157,7 @@ actions = [0, 1, 2, 3, 4, 5, 6, 7]
 states = list(range((size * size) - 1))
 unite(size)
 
-field[len(field) - 1] = 9
+field[len(field) - 2] = 999
 policy, v = iteration(states, actions, field)
 
 size = 19
@@ -161,3 +165,5 @@ size = 19
 print(policy)
 
 print(v)
+
+print(v[(size * size) - 2])
