@@ -78,32 +78,35 @@ SLOPE = [
 # 셋 다 18로 수정함
 
 import numpy as np
-size = 18
-field = np.zeros((size, size))
 
-def unite() : # 상태 가치들 합침
+def unite(size) : # 상태 가치들 합침
     array = []
     for i in range(size) :
         for k in range(size) :
             field[i][k] = HIDE[i][k] + HP[i][k] + SLOPE[i][k]
-    
-    return array
 
-actions = [0, 1, 2, 3, 4, 5, 6, 7]
-# 상 하 좌 우 좌상 우상 좌하 우하
+######
 
-def transition_prob(s, a):
+# 18 * 18 = 324
+# move 수정필요함니다
+######
+
+def move(s, a):
     # 8방향 이동에 따른 새로운 상태 결정
     if a == 0: # 상으로 이동
-        return s-4 if s-4 >= 0 else s
+        return s - 19 if s - 19 >= 0 else s
+    
     elif a == 1: # 하로 이동
-        return s+4 if s+4 <= 15 else s
+        return s + 19 if s <= 341 else s
+    
     elif a == 2: # 좌로 이동
-        return s-1 if s % 4 != 0 else s
+        return s - 1 if s % 19 != 0 else s
+    
     elif a == 3: # 우로 이동
-        return s+1 if s % 4 != 3 else s
+        return s + 1 if s % 19 != 0  else s
+    
     elif a == 4 : # 좌상
-        return s - 5 if s >= 5 and s % 4 != 0 else s
+        return s - 20 if s >= 20 and s % 4 != 0 else s
     elif a == 5 : # 우상
         return s - 3 if s > 3 and s % 4 != 3 else s
     elif a == 6 : # 좌하
@@ -112,29 +115,39 @@ def transition_prob(s, a):
         return s + 5 if s < 11 and s % 4 != 3 else s
     
 def iteration(states, actions, r, gamma = 0.9, limit = 0.001) :
-    V = np.zeros(size * size)
+    v = np.zeros(size * size) # 각 상태들의 가치
+    policy = np.zeros(size * size) # 각 상태들의 최적 정책
+
+    while True :
+        delta = 0 # 상태의 가치가 얼마나 변하는가를 담음
+        for s in states :
+            temp_v = v[s] # 현재 상태의 밸류를 임시 저장
+            v[s] = max([r[move(s, a)] + gamma * move[s, a] * 1] for a in actions)
+            delta = max(delta, abs(temp_v - v[s]))
+            # 기존의 가치 - 새로 갱신한 가치의값과 기존의 델타 값 중 뭐가 더 큰지를 비교
+        if delta < limit :
+            break
+         # 정의한 임계값보다 낮으면 더이상 변해도 의미가 없는 수렴 상태라고 판단 후 종료
     
+        for s in states:  # 모든 상태에 대해 반복
+        # 최적의 행동을 선택하는 정책 계산
+            policy[s] = np.argmax([r[move(s, a)] + gamma * v[move(s, a)] for a in actions])
+    
+    return policy, v  # 최적 정책과 가치 함수 반환
+
+size = 19
+field = np.zeros((size, size))
+actions = [0, 1, 2, 3, 4, 5, 6, 7]
+# 상 하 좌 우 좌상 우상 좌하 우하
+
+unite(size)
+# policy, v = iteration(states, actions, field)
+
+states = list(range(1, (size * size) + 1))
+
+size = 19
+
+for i in range(size) : 
+    for k in range(size) :
+        print(states[i * size + k], end=' ')
     print()
-
-# def value_iteration(states, actions, r, gamma=0.99, threshold=0.001):
-#     V = np.zeros(len(states))  # 각 상태에 대한 가치를 저장할 배열 초기화
-#     policy = np.zeros(len(states), dtype=int)  # 각 상태에서 선택할 최적 행동을 저장할 배열 초기화
-
-#     while True:
-#         delta = 0  # 가치 함수가 얼마나 변경되었는지 추적
-#         for s in states:  # 모든 상태에 대해 반복
-#             V_temp = V[s]  # 현재 상태의 가치를 임시 변수에 저장
-#             # 가능한 모든 행동에 대해 새로운 가치 계산하고 최대값을 현재 상태의 가치로 설정
-#             V[s] = max([r[transition_prob(s, a)] + gamma * V[transition_prob(s, a)] for a in actions])
-#             delta = max(delta, abs(V_temp - V[s]))  # 가장 큰 가치 변화를 delta에 저장
-#         if delta < threshold:  # 변화량이 threshold보다 작으면 반복을 중단
-#             break
-
-#     for s in states:  # 모든 상태에 대해 반복
-#         # 최적의 행동을 선택하는 정책 계산
-#         policy[s] = np.argmax([r[transition_prob(s, a)] + gamma * V[transition_prob(s, a)] for a in actions])
-    
-#     return policy, V  # 최적 정책과 가치 함수 반환
-
-array = unite()
-print(field)
